@@ -1,0 +1,4 @@
+lxml==4.8.0
+pdfrw==0.4
+Pillow==9.1.1
+python-docx==0.8.11
