@@ -51,7 +51,7 @@ from docsg import dsg
 input_file  = "infile.docx";
 output_file = "outfile.docx";
 sign_img    = "sign.png";
-dsg.sign(input_file, output_file, sign_img, dsg.DocType.DOCX);
+dsg.sign(input_file, output_file, sign_img, dsg.DocType.WORD);
 
 # Pour signer un fichier PDF
 input_file  = "infile.pdf";
