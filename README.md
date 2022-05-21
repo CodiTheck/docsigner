@@ -1,5 +1,5 @@
 # Doc Signer
-Programme de signature de document.
+Program to sign a document from an image file inserted in it.
 
 ## Installation
 Executer la commande suivante pour installer les dépendance :
