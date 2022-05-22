@@ -1,8 +1,21 @@
+"""
+Doc Signer
+==========
+Program to sign a document from an image file inserted in it.
+
+@author Dr Mokira
+@date   2022-22-05
+
+"""
+import os
 import enum
 from PIL import Image
 from pdfrw import PdfReader, PdfWriter, PageMerge
 from docx import Document
-from docx.shared import Inches
+from docx.shared import Cm
+
+__version__ = '0.0.1';
+__author__  = 'Dr Mokira';
 
 
 class dsg:
@@ -94,13 +107,14 @@ class dsg:
 
 
     @staticmethod
-    def sign(din, dout, simg, doctype=None):
+    def sign(din, dout, simg, doctype=None, sdim=(128, 128)):
         """ Function that is used to sign a document.
             :args:
                 din  [string] represents the location of the document to be signed.
                 dout [string] represents the location to the signed document obtained after signing.
                 simg [string] represents the image of the signature.
                 doctype [dsg.DocType] Represents the type of document you want to sign.
+                sdim   [tuple] represents the dimensions of the signature image.
 
             :return:
                 True, if the signing operation is successful,
@@ -110,12 +124,13 @@ class dsg:
         assert type(dout) is str, dsg.print_err_message("[dout] variable must be a string type.");
         assert type(simg) is str, dsg.print_err_message("[simg] variable must be a string type.");
         assert doctype is None or type(doctype) is dsg.DocType, dsg.print_err_message("[doctype] variable must be a dsg.DocType type or None.");
+        assert type(sdim) is tuple and len(sdim) == 2, dsg.print_err_message("[sdim] variable must be a tuple type with two elements.");
 
         resp = None;
         if doctype == dsg.DocType.PDF:
-            resp = dsg._sign_pdf(din, dout, simg);
+            resp = dsg._sign_pdf(din, dout, simg, sdim);
         elif doctype == dsg.DocType.WORD:
-            resp = dsg._sign_docx(din, dout, simg);
+            resp = dsg._sign_docx(din, dout, simg, sdim);
         else:
             dsg.printinfo("You must specify the type of document to be signed.");
             return False;
@@ -129,11 +144,12 @@ class dsg:
 
 
     @staticmethod
-    def _sign_pdf(din, dout, simg):
+    def _sign_pdf(din, dout, simg, sdim):
         try:
             # We convert the signature to pdf doc, in first.
             img1 = Image.open(simg);
-            im1  = img1.convert("RGB");
+            im1 = img1.resize(sdim);
+            im1 = im1.convert("RGB");
             im1.save('.sign.pdf');
 
             watermark_file = '.sign.pdf';
@@ -160,6 +176,9 @@ class dsg:
 
             # write the modified content to disk
             writer_output.write(output_file, reader_input);
+            if os.path.exists(watermark_file):
+                os.remove(watermark_file);
+
             return True;
 
         except Exception as e:
@@ -167,17 +186,21 @@ class dsg:
 
 
     @staticmethod
-    def _sign_docx(din, dout, simg):
+    def _sign_docx(din, dout, simg, sdim):
         try:
             # we open doc
             document = Document(din);
 
-            # we put a new paragraph for ower signature
+            # we put 3 new paragraphs for ower signature
+            p = document.add_paragraph();
+            p = document.add_paragraph();
             p = document.add_paragraph();
             r = p.add_run();
 
             # we put the signature and save the data doc
-            r.add_picture(simg)
+            px = lambda cm: cm / 37.795275591;
+            r.add_picture(simg, width=Cm(px(sdim[0])), height=Cm(px(sdim[1])));
+
             document.save(dout);
             return True;
         except Exception as e:
@@ -216,9 +239,22 @@ if __name__ == '__main__':
                             type=str,
                             required=True,
     );
+    parser.add_argument('-w', '--width',
+                            default=128,
+                            dest='width',
+                            help='Width of signature image.',
+                            type=int,
+    );
+    parser.add_argument('-e', '--height',
+                            default=128,
+                            dest='height',
+                            help='Height of signature image.',
+                            type=int,
+    );
     args = parser.parse_args();
     dct  = dsg.DocType.PDF if args.doctype == 'pdf' else dsg.DocType.WORD;
-    dsg.sign(args.din, args.dout, args.simg, dct);
+    dim  = (args.width, args.height);
+    dsg.sign(args.din, args.dout, args.simg, dct, dim);
 
     # print(f'The host is "{args.host}"')
 
