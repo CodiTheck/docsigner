@@ -45,7 +45,35 @@ python docsg.py --type=pdf --in=./input.pdf --simg=./qrcode.png --width=128 --he
 6. `-o` ou `--out` pour définir le chemin vers le fichier qui va représente le document signé.
 
 Les paramètres de dimensionnement de l'image de la signature ne sont pas à renseigner obligatoirement. Les
-valeurs par défaut de ces dimensions sont `128 x 128`.
+valeurs par défaut de ces dimensions sont `150 x 150`.
+
+#### Positionnement de l'image
+Pour positionner l'image sur la page du document, il faut utiliser les arguments `-x` ou `--margin-left` et `-y` ou `--margin-bottom`.
+```sh
+python docsg.py -t pdf -i ./input.pdf -s ./qrcode.png -x 400 -y 10 -o ./output.pdf
+
+# OU
+python docsg.py -t pdf -i ./input.pdf -s ./qrcode.png --margin-left=400  --margin-bottom=15 -o ./output.pdf
+
+```
+
+Par défaut `x` et `y` valent tous `(10, 10)`.
+
+> **NOTE**: Cette fonctionnalité optionnalle de positionnement ne marche que pour l'option PDF.
+
+#### Selection d'un numéro de page
+Pour selectionner le numéro de page sur laquelle on veux positionner l'image, on utilise le paramètre `-n` ou `--page-number`.
+```sh
+# on veut positionner sur la 2ème page du document.
+python docsg.py -t pdf -i ./input.pdf -s ./qrcode.png -n 2 -o ./output.pdf
+
+# OU
+python docsg.py -t pdf -i ./input.pdf -s ./qrcode.png --page-number=2 -o ./output.pdf
+```
+
+Par défaut le programme positionne l'image sur la `dernière page` du document.
+
+> **NOTE**: Cette fonctionnalité optionnalle ne marche pas encore pour les document WORD.
 
 ### En code python
 ```python

@@ -107,7 +107,7 @@ class dsg:
 
 
     @staticmethod
-    def sign(din, dout, simg, doctype=None, sdim=(128, 128)):
+    def sign(din, dout, simg, doctype=None, pgn=-1, sdim=(128, 128), pos=(0, 0), color=(255, 255, 255)):
         """ Function that is used to sign a document.
             :args:
                 din  [string] represents the location of the document to be signed.
@@ -124,13 +124,15 @@ class dsg:
         assert type(dout) is str, dsg.print_err_message("[dout] variable must be a string type.");
         assert type(simg) is str, dsg.print_err_message("[simg] variable must be a string type.");
         assert doctype is None or type(doctype) is dsg.DocType, dsg.print_err_message("[doctype] variable must be a dsg.DocType type or None.");
-        assert type(sdim) is tuple and len(sdim) == 2, dsg.print_err_message("[sdim] variable must be a tuple type with two elements.");
+        assert type(sdim) is tuple and len(sdim) == 2, dsg.print_err_message("[sdim] variable must be a tuple type with two elements (width, height).");
+        assert type(pos) is tuple and len(pos) == 2, dsg.print_err_message("[pos] variable must be a tuple type with two elements (x, y).");
+        assert type(pgn) is int, dsg.print_err_message("[sdim] variable must be an integer type.");
 
         resp = None;
         if doctype == dsg.DocType.PDF:
-            resp = dsg._sign_pdf(din, dout, simg, sdim);
+            resp = dsg._sign_pdf(din, dout, simg, pgn, sdim, pos, color);
         elif doctype == dsg.DocType.WORD:
-            resp = dsg._sign_docx(din, dout, simg, sdim);
+            resp = dsg._sign_docx(din, dout, simg, pgn, sdim);
         else:
             dsg.printinfo("You must specify the type of document to be signed.");
             return False;
@@ -144,13 +146,24 @@ class dsg:
 
 
     @staticmethod
-    def _sign_pdf(din, dout, simg, sdim):
+    def __adjust(p1, p2, x=36, y=36):
+        info2 = PageMerge().add(p2);
+        x2, y2, w2, h2 = info2.xobj_box;
+        x += w2;
+        y += h2;
+        viewrect = (x, y, (w2 - x2 - 2 * x), (h2 - y2 - 2 * y));
+        page     = PageMerge(p1).add(p2, viewrect=viewrect);
+        return page.render();
+
+
+    @staticmethod
+    def _sign_pdf(din, dout, simg, pgn, sdim, pos, color):
         try:
             # We convert the signature to pdf doc, in first.
             img1 = Image.open(simg);
             im1 = img1.resize(sdim);
             im1 = im1.convert("RGB");
-            im1.save('.sign.pdf');
+            im1.save('.sign.pdf', quality=95);
 
             watermark_file = '.sign.pdf';
             input_file     = din;
@@ -164,19 +177,19 @@ class dsg:
             watermark_input = PdfReader(watermark_file);
             watermark       = watermark_input.pages[0];
 
-            # go through the pages one after the next
-            # for current_page in range(len(reader_input.pages)):
-            #    merger = PageMerge(reader_input.pages[current_page]);
-            #    merger.add(watermark).render();
-
-            # insert the signature image on the doc last page.
+            # insert the signature image on the doc selected page.
             cp = len(reader_input.pages);
-            merger = PageMerge(reader_input.pages[cp - 1]);
-            merger.add(watermark).render();
+            pn = (cp - 1) if (pgn == -1 or pgn < 1 or pgn > cp) else (pgn - 1);
+
+            # merger = PageMerge(reader_input.pages[pn]);
+            # merger.add(watermark).render();
+            page = reader_input.pages[pn];
+            dsg.__adjust(page, watermark, pos[0], pos[1]);
 
             # write the modified content to disk
             writer_output.write(output_file, reader_input);
             if os.path.exists(watermark_file):
+                # if the swap file is exists, delete it
                 os.remove(watermark_file);
 
             return True;
@@ -186,7 +199,7 @@ class dsg:
 
 
     @staticmethod
-    def _sign_docx(din, dout, simg, sdim):
+    def _sign_docx(din, dout, simg, pgn, sdim):
         try:
             # we open doc
             document = Document(din);
@@ -210,7 +223,7 @@ class dsg:
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser();
+    parser = argparse.ArgumentParser(description="Program that use to merge an image to document page.");
     parser.add_argument('-t', '--type',
                             default='pdf',
                             dest='doctype',
@@ -224,6 +237,12 @@ if __name__ == '__main__':
                             help='Input document.',
                             type=str,
                             required=True,
+    );
+    parser.add_argument('-n', '--page-number',
+                            default=-1,
+                            dest='page',
+                            help='Page number.',
+                            type=int,
     );
     parser.add_argument('-o', '--out',
                             default='./output.pdf',
@@ -240,21 +259,55 @@ if __name__ == '__main__':
                             required=True,
     );
     parser.add_argument('-w', '--width',
-                            default=128,
+                            default=150,
                             dest='width',
                             help='Width of signature image.',
                             type=int,
     );
+    parser.add_argument('-x', '--margin-left',
+                            default=10,
+                            dest='x',
+                            help='Margin left of signature image.',
+                            type=int,
+    );
+    parser.add_argument('-y', '--margin-bottom',
+                            default=10,
+                            dest='y',
+                            help='Margin bottom of signature image.',
+                            type=int,
+    );
+    parser.add_argument('-r', '--red',
+                            default=255,
+                            dest='redc',
+                            help='Background color red for signature image.',
+                            type=int,
+    );
+    parser.add_argument('-g', '--green',
+                            default=255,
+                            dest='greenc',
+                            help='Background color green for signature image.',
+                            type=int,
+    );
+    parser.add_argument('-b', '--blue',
+                            default=255,
+                            dest='bluec',
+                            help='Background color blue for signature image.',
+                            type=int,
+    );
     parser.add_argument('-e', '--height',
-                            default=128,
+                            default=150,
                             dest='height',
                             help='Height of signature image.',
                             type=int,
     );
     args = parser.parse_args();
     dct  = dsg.DocType.PDF if args.doctype == 'pdf' else dsg.DocType.WORD;
+    col  = (args.redc, args.greenc, args.bluec);
     dim  = (args.width, args.height);
-    dsg.sign(args.din, args.dout, args.simg, dct, dim);
+    pos  = (args.x, args.y);
+    pgn  = args.page;
+
+    dsg.sign(args.din, args.dout, args.simg, dct, pgn, dim, pos, col);
 
     # print(f'The host is "{args.host}"')
 
