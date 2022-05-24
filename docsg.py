@@ -320,8 +320,8 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--out',   default='./output.pdf', dest='dout', help='Output document.', type=str, required=True);
     parser.add_argument('-s', '--simg',  default='./image.png', dest='simg', help='Signature image.', type=str, required=True);
     parser.add_argument('-w', '--width', default=150, dest='width', help='Width of signature image.', type=int);
-    parser.add_argument('-x', '--margin-x', default=10, dest='x', help='Margin left of signature image.', type=int);
-    parser.add_argument('-y', '--margin-y', default=10, dest='y', help='Margin bottom of signature image.', type=int);
+    parser.add_argument('-x', '--margin-x', default=32, dest='x', help='Margin left of signature image.', type=int);
+    parser.add_argument('-y', '--margin-y', default=32, dest='y', help='Margin bottom of signature image.', type=int);
     parser.add_argument('-e', '--height', default=150, dest='height', help='Height of signature image.', type=int);
 
     # BOTTOM_CENTER = 0x010;
@@ -352,7 +352,7 @@ if __name__ == '__main__':
     pos  = (args.x, args.y);
     pgn  = args.page;
 
-    rlpos = None;
+    rlpos = dsg.RelativePos.BOTTOM_RIGHT;
     if args.bottom_center:  rlpos = dsg.RelativePos.BOTTOM_CENTER;
     if args.bottom_right:   rlpos = dsg.RelativePos.BOTTOM_RIGHT;
     if args.bottom_left:    rlpos = dsg.RelativePos.BOTTOM_LEFT;

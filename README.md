@@ -47,7 +47,7 @@ python docsg.py --type=pdf --in=./input.pdf --simg=./qrcode.png --width=128 --he
 Les paramètres de dimensionnement de l'image de la signature ne sont pas à renseigner obligatoirement. Les
 valeurs par défaut de ces dimensions sont `150 x 150`.
 
-#### Positionnement de l'image
+#### Positionnement absolue de l'image
 Pour positionner l'image sur la page du document, il faut utiliser les arguments `-x` ou `--margin-left` et `-y` ou `--margin-bottom`.
 ```sh
 python docsg.py -t pdf -i ./input.pdf -s ./qrcode.png -x 400 -y 10 -o ./output.pdf
@@ -57,7 +57,7 @@ python docsg.py -t pdf -i ./input.pdf -s ./qrcode.png --margin-left=400  --margi
 
 ```
 
-Par défaut `x` et `y` valent tous `(10, 10)`.
+Par défaut `x` et `y` valent tous `(32, 32)`.
 
 > **NOTE**: Cette fonctionnalité optionnalle de positionnement ne marche que pour l'option PDF.
 
@@ -72,6 +72,33 @@ python docsg.py -t pdf -i ./input.pdf -s ./qrcode.png --page-number=2 -o ./outpu
 ```
 
 Par défaut le programme positionne l'image sur la `dernière page` du document.
+
+> **NOTE**: Cette fonctionnalité optionnalle ne marche pas encore pour les document WORD.
+
+#### Positionnement relatif d'une image
+Pour positionner une image une page de document de façon relative, il faut spécifier les arguments suivants:
+1. `--bottom-center` pour positionner en bas au centre;
+2. `--bottom-right` pour positionner en bas à droite;
+3. `--bottom-left` pour positionner en bas à gauche;
+4. `--top-center` pour positionner en haut au centre;
+5. `--top-right` pour positionner en haut à droite;
+6. `--top-left` pour positionner en haut à gauche;
+7. `--center-right` pour positionner au centre à droite;
+8. `--center-left` pour positionner au centre à gauche;
+9. `--center` pour positionner au centre de la page.
+
+Par défaut, le programme positionne l'image en bas à droite de la page (`--bottom-right`). Pour customiser un peu plus
+le positionnement, il est posible de spécifier en plus une position absolue pour essayer de déplacer l'image. Prenons,
+l'exemple de la commande suivante :
+
+```sh
+python docsg.py -t pdf -i ./input.pdf -s ./qrcode.png -n 2 -o ./output.pdf --top-right -x 120 -y 50
+
+```
+Cette commande place l'image en `haut à droite` de la page `numéro 2` du document PDF `input.pdf` et la décale de `120px`
+vers la gauche (valeur de `-x`) et de `50px` vers le bas (valeur de `-y`). Ces modifications sont ensuite enrégistrées dans le
+document `output.pdf` pour ne pas impacter le document d'origine `input.pdf`.
+
 
 > **NOTE**: Cette fonctionnalité optionnalle ne marche pas encore pour les document WORD.
 
